@@ -18,9 +18,34 @@ export interface RealtimeEvent {
   payload: Record<string, unknown>;
 }
 
+export interface ScenarioDefinition {
+  name: string;
+  description: string;
+  events: RealtimeEvent[];
+}
+
+export interface TimelineEvent {
+  index: number;
+  event: RealtimeEvent;
+  emittedAtMs: number;
+  emittedAtIso: string;
+}
+
+export interface PlaybackState {
+  scenarioName: string;
+  cursor: number;
+  currentTimeMs: number;
+  isPlaying: boolean;
+  speedMultiplier: number;
+}
+
 export interface TransportState {
   phase: TransportPhase;
   activeScenario: string;
   cursor: number;
   pendingAcks: number;
+  retries: number;
+  drops: number;
+  duplicates: number;
+  messagesReceived: number;
 }
