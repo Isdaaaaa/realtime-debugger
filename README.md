@@ -24,8 +24,8 @@ npm run build
 npm run test
 ```
 
-## Current slice status (slice-000)
-- Project scaffolding initialized
-- Tailwind token system wired
-- Two-panel timeline + inspector layout shell in place
-- Sample event fixtures and mock transport adapter added
+## Current slice status (slice-001)
+- Deterministic `ScenarioEngine` added with playback hooks: `play`, `pause`, `stepForward`, `stepBackward`, `seekToIndex`, `seekToTime`, and speed multiplier support
+- Named scenario fixtures introduced (`chat-presence`, `retry-storm`) and loaded through the mock transport
+- Mock transport now simulates lifecycle transitions (connect/reconnect/disconnect), retries, drops, duplicates, message/ack accounting
+- Vitest coverage added for ordering determinism and transport simulation behavior
