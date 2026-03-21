@@ -1,0 +1,37 @@
+[
+  {
+    "id": "slice-000",
+    "title": "Bootstrap tooling and project scaffolding",
+    "status": "todo"
+  },
+  {
+    "id": "slice-001",
+    "title": "Scenario engine and mocked transport layer",
+    "status": "todo"
+  },
+  {
+    "id": "slice-002",
+    "title": "Timeline visualization and event playback UI",
+    "status": "todo"
+  },
+  {
+    "id": "slice-003",
+    "title": "State inspector and client snapshot panel",
+    "status": "todo"
+  },
+  {
+    "id": "slice-004",
+    "title": "Preset scenarios for chat presence and notifications",
+    "status": "todo"
+  },
+  {
+    "id": "slice-005",
+    "title": "Debugging affordances (filters, step-through, annotations)",
+    "status": "todo"
+  },
+  {
+    "id": "slice-006",
+    "title": "Polish, docs, and demo capture setup",
+    "status": "todo"
+  }
+]
