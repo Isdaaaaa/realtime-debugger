@@ -14,6 +14,11 @@ interface TimelinePanelProps {
   onJumpToEvent: (index: number) => void;
   onSelectEvent: (index: number) => void;
   isLoading: boolean;
+  activeFilters: RealtimeEventType[];
+  filteredIndexes: number[];
+  focusMode: 'all' | 'step';
+  onToggleFilter: (eventType: RealtimeEventType) => void;
+  onFocusModeChange: (mode: 'all' | 'step') => void;
 }
 
 const laneLabels: Record<TimelineLane, string> = {
@@ -46,10 +51,26 @@ export function TimelinePanel({
   onSpeedChange,
   onJumpToEvent,
   onSelectEvent,
-  isLoading
+  isLoading,
+  activeFilters,
+  filteredIndexes,
+  focusMode,
+  onToggleFilter,
+  onFocusModeChange
 }: TimelinePanelProps) {
   const lastTime = events.length ? events[events.length - 1].atMs : 1;
   const cursorPercent = Math.min(100, asPercent(currentTimeMs, lastTime));
+  const visibleEntries = events
+    .map((event, index) => ({ event, index }))
+    .filter(({ index, event }) => filteredIndexes.includes(index) && (focusMode === 'all' || Math.abs(index - cursor) <= 3 || event.type !== 'message'));
+
+  const annotationForEvent = (event: RealtimeEvent): string | null => {
+    if (event.type === 'drop') return 'Packet dropped — verify retry handling';
+    if (event.type === 'duplicate') return 'Duplicate delivery detected';
+    if (event.type === 'retry') return 'Retry scheduled after failed attempt';
+    if (event.type === 'ack' && String(event.payload?.delayed ?? '') === 'true') return 'Delayed ACK observed';
+    return null;
+  };
 
   return (
     <section className="flex h-full min-h-[28rem] flex-col rounded-xl border border-debug-border bg-debug-panel/95 p-4 shadow-pulse">
@@ -83,6 +104,16 @@ export function TimelinePanel({
           </select>
 
           <select
+            value={focusMode}
+            onChange={(event) => onFocusModeChange(event.target.value as 'all' | 'step')}
+            className="rounded-md border border-debug-border bg-slate-950 px-2 py-1.5 text-xs text-debug-text"
+            aria-label="Step focus mode"
+          >
+            <option value="all">All events</option>
+            <option value="step">Step focus</option>
+          </select>
+
+          <select
             value={cursor >= 0 ? String(cursor) : ''}
             onChange={(event) => onJumpToEvent(Number(event.target.value))}
             className="rounded-md border border-debug-border bg-slate-950 px-2 py-1.5 text-xs text-debug-text"
@@ -91,7 +122,7 @@ export function TimelinePanel({
             <option value="" disabled>
               Jump to event…
             </option>
-            {events.map((entry, index) => (
+            {visibleEntries.map(({ event: entry, index }) => (
               <option key={entry.id} value={index}>
                 #{index} • {entry.type} • t+{entry.atMs}ms
               </option>
@@ -100,6 +131,25 @@ export function TimelinePanel({
         </div>
       </header>
 
+      <div className="mb-3 flex flex-wrap items-center gap-2">
+        {Object.keys(eventTone).map((key) => {
+          const type = key as RealtimeEventType;
+          const isActive = activeFilters.includes(type);
+          return (
+            <button
+              key={type}
+              type="button"
+              onClick={() => onToggleFilter(type)}
+              className={`rounded-full border px-2.5 py-1 text-[11px] uppercase tracking-[0.08em] ${
+                isActive ? 'border-debug-accent/60 bg-debug-accent/10 text-debug-accent' : 'border-debug-border bg-slate-950/40 text-debug-muted'
+              }`}
+            >
+              {type}
+            </button>
+          );
+        })}
+      </div>
+
       {isLoading ? (
         <div className="grid flex-1 place-items-center rounded-lg border border-debug-border bg-slate-950/40">
           <div className="text-center">
@@ -107,7 +157,7 @@ export function TimelinePanel({
             <p className="mt-2 text-sm text-debug-text">Hydrating transport timeline…</p>
           </div>
         </div>
-      ) : events.length === 0 ? (
+      ) : visibleEntries.length === 0 ? (
         <div className="grid flex-1 place-items-center rounded-lg border border-dashed border-debug-border bg-slate-950/40 p-6 text-center">
           <div>
             <p className="text-xs uppercase tracking-[0.18em] text-debug-muted">No events</p>
@@ -128,8 +178,7 @@ export function TimelinePanel({
                 <div key={lane} className="grid grid-cols-[7rem_1fr] items-center gap-3">
                   <p className="text-xs uppercase tracking-[0.12em] text-debug-muted">{laneLabels[lane]}</p>
                   <div className="relative h-10 rounded border border-debug-border bg-slate-900/70">
-                    {events
-                      .map((event, index) => ({ event, index }))
+                    {visibleEntries
                       .filter(({ event }) => laneForEvent(event.type) === lane)
                       .map(({ event, index }) => {
                         const left = asPercent(event.atMs, lastTime);
@@ -155,7 +204,7 @@ export function TimelinePanel({
           </div>
 
           <div className="grid flex-1 gap-2 overflow-auto pr-1">
-            {events.map((event, index) => (
+            {visibleEntries.map(({ event, index }) => (
               <article
                 key={event.id}
                 className={`rounded-lg border p-3 transition ${
@@ -168,6 +217,11 @@ export function TimelinePanel({
                 </div>
                 <p className="text-sm text-debug-text">{event.summary}</p>
                 <p className="mt-1 font-mono text-xs text-debug-muted">{event.channel}</p>
+                {annotationForEvent(event) ? (
+                  <p className="mt-2 rounded border border-debug-warn/30 bg-debug-warn/10 px-2 py-1 text-xs text-debug-warn">
+                    {annotationForEvent(event)}
+                  </p>
+                ) : null}
               </article>
             ))}
           </div>
