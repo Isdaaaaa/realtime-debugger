@@ -1,54 +1,58 @@
 # Realtime Debugger
 
-A portfolio-focused realtime debugging workbench that makes transport glitches visible with deterministic playback.
+A visual, interactive playground for inspecting, simulating, and debugging WebSocket/SSE message flows. Runs entirely on mocked scenarios so it’s easy to demo and reason about realtime UX failures.
 
-## What it demonstrates
-- Timeline visualization of connection, message, retry, drop, duplicate, ack, and disconnect events
-- Deterministic playback controls with step-through and speed control
-- Scenario presets for chat presence, notification flow, and retry storms
-- State inspector with derived flags and anomaly callouts
-- Payload inspection with structured JSON sections
-- Keyboard-first debugging workflow
+What it does
 
-## Stack
-- React + TypeScript + Vite
-- Tailwind CSS
-- Vitest
+- Simulates realtime transports (WebSocket/SSE) with scripted scenarios.
+- Visualizes connection events and messages on a timeline.
+- Lets you step through, play, and seek event sequences deterministically.
+- Shows client state snapshots aligned with timeline events to help surface ordering, duplication, and missed-message bugs.
 
-## Run locally
-```bash
-npm install
-npm run dev
-```
+Core features
 
-## Quality checks
-```bash
-npm run typecheck
-npm run test
-npm run build
-```
+- Mock transport service with deterministic event fixtures.
+- Timeline view with grouped connection and message events.
+- Playback controls (step, play/pause, speed, seek).
+- Payload inspector with diffing to detect duplicates or missed messages.
+- State inspector showing XState-driven client state over time.
+- Preset scenarios (chat presence, reconnect storm, notification flows) for quick demos.
 
-## Keyboard shortcuts
-- `Space` or `K` — Play/Pause
-- `←` / `→` — Step backward/forward
-- `+` / `-` — Increase/decrease playback speed
+Why it matters
 
-## Demo capture workflow
-1. Start the app: `npm run dev`
-2. Pick **Retry Storm — ACK backlog and duplicate delivery**
-3. Use **Step focus** and jump through retry/drop/duplicate events
-4. Open payload + anomaly callouts in the inspector
-5. Capture with your preferred tool (Kap, Screen Studio, OBS)
-6. Keep clips under 20s and export at 1080p
+Realtime systems are hard to reason about because issues are transient and timing-dependent. This tool makes those invisible timing and ordering problems legible, helping engineers and QA reproduce, explain, and fix realtime UX failures faster.
 
-### Suggested demo clips
-- **Clip A:** Stable connection baseline + clean acks
-- **Clip B:** Retry storm with delayed ACKs and duplicate delivery
-- **Clip C:** Event filtering + timeline jump controls for root-cause isolation
+Setup
 
-## Accessibility and polish notes
-- Control buttons and selectors include explicit labels
-- Event filters expose pressed state
-- Timeline event markers include descriptive labels
-- Loading/empty states are intentional and styled to match design tokens
-- Layout remains responsive for smaller viewports
+Requirements:
+- Node 18+ (or compatible)
+- pnpm or npm
+
+Install:
+
+1. cd into the project
+2. pnpm install
+
+Run (development):
+
+pnpm dev
+
+Build:
+
+pnpm build
+
+Showcase notes
+
+- Capture a short GIF showing a reconnect storm scenario with timeline + state inspector visible.
+- Record a 60s demo script explaining how the timeline maps to client state and how to spot duplication or missed-message symptoms.
+- Include links to the scenario JSON fixtures in the repo for reproducibility.
+
+Limitations
+
+- This is a mocked, local demo environment — it does not connect to a real backend.
+- Not intended for collaborative editing or persisted user projects yet.
+- No authentication or multi-user support in the MVP.
+
+License
+
+MIT
