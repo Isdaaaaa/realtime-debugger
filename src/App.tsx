@@ -117,7 +117,7 @@ function App() {
           onSelectEvent={handleJumpToEvent}
           isLoading={isLoading}
         />
-        <InspectorPanel state={transportState} selectedEvent={selectedEvent} isLoading={isLoading} />
+        <InspectorPanel state={transportState} events={events} selectedEvent={selectedEvent} isLoading={isLoading} />
       </section>
     </main>
   );
