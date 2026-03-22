@@ -24,6 +24,15 @@ export interface ScenarioDefinition {
   events: RealtimeEvent[];
 }
 
+export interface ScenarioPreset {
+  id: string;
+  label: string;
+  summary: string;
+  expectedBehavior: string;
+  observedBehavior: string;
+  rootCauseHint: string;
+}
+
 export interface TimelineEvent {
   index: number;
   event: RealtimeEvent;
