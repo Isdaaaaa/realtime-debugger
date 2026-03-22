@@ -72,16 +72,18 @@ export function InspectorPanel({ state, events, selectedEvent, isLoading }: Insp
   const payloadSections = selectedEvent ? splitPayloadSections(selectedEvent.payload) : [];
 
   return (
-    <aside className="flex h-full min-h-[28rem] flex-col gap-3 rounded-xl border border-debug-border bg-debug-panel/90 p-3 sm:p-4">
-      <section className="rounded-lg border border-debug-border bg-black/20 p-3">
+    <aside className="flex h-full min-h-[28rem] flex-col gap-3 rounded-xl border border-debug-border bg-debug-panel/90 p-3 sm:p-4" aria-label="Transport state inspector">
+      <section className="rounded-lg border border-debug-border bg-black/20 p-3" aria-label="State inspector">
         <p className="text-xs uppercase tracking-[0.18em] text-debug-muted">State inspector</p>
         <h3 className="mt-1 text-base font-semibold">Client Snapshot</h3>
 
         {isLoading ? (
-          <div className="mt-3 rounded-md border border-debug-border bg-slate-950/70 p-3 text-sm text-debug-muted">Collecting client state baseline…</div>
+          <div className="mt-3 rounded-md border border-debug-border bg-slate-950/70 p-3 text-sm text-debug-muted" role="status" aria-live="polite">
+            Collecting client state baseline…
+          </div>
         ) : (
           <Fragment>
-            <dl className="mt-3 grid grid-cols-2 gap-x-3 gap-y-2 text-sm">
+            <dl className="mt-3 grid grid-cols-2 gap-x-3 gap-y-2 text-sm" aria-label="Client state metrics">
               <dt className="text-debug-muted">Phase</dt>
               <dd className={statusTone[state.phase]}>{state.phase}</dd>
 
@@ -103,7 +105,7 @@ export function InspectorPanel({ state, events, selectedEvent, isLoading }: Insp
               <dd>{snapshot.observedCount}</dd>
             </dl>
 
-            <div className="mt-3 rounded-md border border-debug-border bg-slate-950/40 p-2.5">
+            <div className="mt-3 rounded-md border border-debug-border bg-slate-950/40 p-2.5" role="group" aria-label="Observed channels">
               <p className="text-[11px] uppercase tracking-[0.12em] text-debug-muted">Connection + channels</p>
               {snapshot.channels.length ? (
                 <div className="mt-2 flex flex-wrap gap-2">
@@ -117,6 +119,7 @@ export function InspectorPanel({ state, events, selectedEvent, isLoading }: Insp
                             ? 'border-debug-accent/50 bg-debug-accent/10 text-debug-accent'
                             : 'border-debug-border bg-black/20 text-debug-muted'
                         }`}
+                        aria-label={active ? `${channel}, active channel` : channel}
                       >
                         {channel}
                       </span>
@@ -128,16 +131,16 @@ export function InspectorPanel({ state, events, selectedEvent, isLoading }: Insp
               )}
             </div>
 
-            <div className="mt-3 flex flex-wrap gap-2">
+            <div className="mt-3 flex flex-wrap gap-2" role="list" aria-label="Derived client flags">
               {derivedFlags.map((flag) => (
-                <span key={flag.label} className={`rounded-full border px-2 py-0.5 text-[11px] ${chipTone[flag.tone]}`}>
+                <span key={flag.label} className={`rounded-full border px-2 py-0.5 text-[11px] ${chipTone[flag.tone]}`} role="listitem">
                   {flag.label}
                 </span>
               ))}
             </div>
 
             {anomalies.length > 0 ? (
-              <div className="mt-3 space-y-2">
+              <div className="mt-3 space-y-2" role="list" aria-label="Detected anomalies">
                 {anomalies.map((anomaly) => (
                   <div
                     key={anomaly.title}
@@ -146,6 +149,7 @@ export function InspectorPanel({ state, events, selectedEvent, isLoading }: Insp
                         ? 'border-debug-warn/40 bg-debug-warn/10 text-debug-warn'
                         : 'border-debug-accent/40 bg-debug-accent/10 text-debug-accent'
                     }`}
+                    role="listitem"
                   >
                     <p className="font-semibold uppercase tracking-[0.08em]">{anomaly.title}</p>
                     <p className="mt-1 text-debug-text">{anomaly.detail}</p>
@@ -157,14 +161,16 @@ export function InspectorPanel({ state, events, selectedEvent, isLoading }: Insp
         )}
       </section>
 
-      <section className="flex-1 rounded-lg border border-debug-border bg-black/10 p-3">
+      <section className="flex-1 rounded-lg border border-debug-border bg-black/10 p-3" aria-label="Payload viewer">
         <p className="text-xs uppercase tracking-[0.18em] text-debug-muted">Payload viewer</p>
         <h3 className="mt-1 text-base font-semibold">Selected Event</h3>
 
         {isLoading ? (
-          <div className="mt-3 rounded-md border border-debug-border bg-slate-950/70 p-3 text-sm text-debug-muted">Waiting for event stream hydrate…</div>
+          <div className="mt-3 rounded-md border border-debug-border bg-slate-950/70 p-3 text-sm text-debug-muted" role="status" aria-live="polite">
+            Waiting for event stream hydrate…
+          </div>
         ) : selectedEvent ? (
-          <div className="mt-3 space-y-2 overflow-auto pr-1">
+          <div className="mt-3 space-y-2 overflow-auto pr-1" aria-label={`Payload for ${selectedEvent.type} event`}>
             <div className="flex flex-wrap items-center gap-2 rounded-md border border-debug-border bg-slate-950/70 px-2.5 py-2">
               <span className="rounded-full border border-debug-border px-2 py-0.5 text-[11px] text-debug-text">{selectedEvent.type}</span>
               <span className="font-mono text-xs text-debug-muted">{selectedEvent.channel}</span>
@@ -183,7 +189,7 @@ export function InspectorPanel({ state, events, selectedEvent, isLoading }: Insp
             ))}
           </div>
         ) : (
-          <div className="mt-3 rounded-md border border-dashed border-debug-border p-3 text-sm text-debug-muted">
+          <div className="mt-3 rounded-md border border-dashed border-debug-border p-3 text-sm text-debug-muted" role="status" aria-live="polite">
             Move the cursor or jump to an event to inspect payloads and anomaly callouts.
           </div>
         )}

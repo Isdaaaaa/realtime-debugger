@@ -7,6 +7,7 @@ import { createMockTransport } from './mocks/transport';
 
 const MIN_SPEED = 0.25;
 const MAX_SPEED = 2;
+const SPEED_STEPS = [0.25, 0.5, 1, 1.5, 2] as const;
 
 function App() {
   const [activeScenario, setActiveScenario] = useState(defaultScenarioName);
@@ -120,6 +121,53 @@ function App() {
     setSpeed(bounded);
   };
 
+  useEffect(() => {
+    const handleKeydown = (event: KeyboardEvent): void => {
+      const target = event.target as HTMLElement | null;
+      if (target) {
+        const tagName = target.tagName.toLowerCase();
+        if (tagName === 'input' || tagName === 'select' || tagName === 'textarea' || target.isContentEditable) {
+          return;
+        }
+      }
+
+      const key = event.key.toLowerCase();
+      const currentSpeedIndex = SPEED_STEPS.findIndex((value) => value === speed);
+
+      if (key === ' ' || key === 'k') {
+        event.preventDefault();
+        handleTogglePlay();
+        return;
+      }
+
+      if (key === 'arrowright' || key === ']' || key === '.') {
+        event.preventDefault();
+        handleStepForward();
+        return;
+      }
+
+      if (key === 'arrowleft' || key === '[' || key === ',') {
+        event.preventDefault();
+        handleStepBackward();
+        return;
+      }
+
+      if ((key === '+' || key === '=') && currentSpeedIndex < SPEED_STEPS.length - 1) {
+        event.preventDefault();
+        handleSpeedChange(SPEED_STEPS[currentSpeedIndex + 1]);
+        return;
+      }
+
+      if ((key === '-' || key === '_') && currentSpeedIndex > 0) {
+        event.preventDefault();
+        handleSpeedChange(SPEED_STEPS[currentSpeedIndex - 1]);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeydown);
+    return () => window.removeEventListener('keydown', handleKeydown);
+  }, [speed, isPlaying, transport]);
+
   const handleJumpToEvent = (index: number): void => {
     const event = transport.seekToIndex(index);
     const state = transport.getState();
@@ -130,7 +178,7 @@ function App() {
   };
 
   return (
-    <main className="mx-auto flex min-h-screen w-full max-w-7xl flex-col px-4 py-6 sm:px-6 lg:px-8">
+    <main className="mx-auto flex min-h-screen w-full max-w-7xl flex-col px-4 py-6 sm:px-6 lg:px-8" aria-label="Realtime debugger dashboard">
       <header className="mb-4 flex flex-wrap items-end justify-between gap-3">
         <div>
           <p className="text-xs uppercase tracking-[0.2em] text-debug-muted">Realtime Debugger</p>
