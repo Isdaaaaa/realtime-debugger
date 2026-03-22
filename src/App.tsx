@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
+import type { RealtimeEventType } from './types/events';
 import { InspectorPanel } from './components/InspectorPanel';
 import { TimelinePanel } from './components/TimelinePanel';
-import { defaultScenarioName, scenarioPresets } from './data/scenarios';
+import { defaultScenarioName, getScenarioPreset, scenarioPresets } from './data/scenarios';
 import { createMockTransport } from './mocks/transport';
 
 const MIN_SPEED = 0.25;
@@ -11,7 +12,7 @@ function App() {
   const [activeScenario, setActiveScenario] = useState(defaultScenarioName);
   const transport = useMemo(() => createMockTransport(activeScenario), [activeScenario]);
   const events = useMemo(() => transport.getEvents(), [transport]);
-  const preset = useMemo(() => scenarioPresets.find((entry) => entry.id === activeScenario) ?? scenarioPresets[0], [activeScenario]);
+  const preset = useMemo(() => getScenarioPreset(activeScenario) ?? scenarioPresets[0], [activeScenario]);
 
   const [isLoading, setIsLoading] = useState(true);
   const [cursor, setCursor] = useState(-1);
@@ -19,6 +20,16 @@ function App() {
   const [speed, setSpeed] = useState(1);
   const [currentTimeMs, setCurrentTimeMs] = useState(0);
   const [transportState, setTransportState] = useState(transport.initialState);
+  const [activeFilters, setActiveFilters] = useState<RealtimeEventType[]>([
+    'connect',
+    'message',
+    'retry',
+    'drop',
+    'duplicate',
+    'ack',
+    'disconnect'
+  ]);
+  const [focusMode, setFocusMode] = useState<'all' | 'step'>('all');
 
   useEffect(() => {
     setIsLoading(true);
@@ -52,7 +63,25 @@ function App() {
     return () => window.clearInterval(interval);
   }, [events.length, isPlaying, speed, transport]);
 
+  const filteredIndexes = useMemo(
+    () =>
+      events
+        .map((event, index) => ({ event, index }))
+        .filter(({ event }) => activeFilters.includes(event.type))
+        .map(({ index }) => index),
+    [activeFilters, events]
+  );
+
   const selectedEvent = cursor >= 0 ? transport.getEventAt(cursor) : undefined;
+
+  const handleToggleFilter = (eventType: RealtimeEventType): void => {
+    setActiveFilters((prev) => {
+      if (prev.includes(eventType)) {
+        return prev.length === 1 ? prev : prev.filter((entry) => entry !== eventType);
+      }
+      return [...prev, eventType];
+    });
+  };
 
   const handleTogglePlay = (): void => {
     if (isPlaying) {
@@ -161,6 +190,11 @@ function App() {
           onJumpToEvent={handleJumpToEvent}
           onSelectEvent={handleJumpToEvent}
           isLoading={isLoading}
+          activeFilters={activeFilters}
+          filteredIndexes={filteredIndexes}
+          focusMode={focusMode}
+          onToggleFilter={handleToggleFilter}
+          onFocusModeChange={setFocusMode}
         />
         <InspectorPanel state={transportState} events={events} selectedEvent={selectedEvent} isLoading={isLoading} />
       </section>

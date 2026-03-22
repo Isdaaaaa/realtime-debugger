@@ -14,6 +14,6 @@ describe('scenario presets', () => {
     const ids = scenarioPresets.map((preset) => preset.id);
     expect(ids).toContain('chat-presence');
     expect(ids).toContain('live-notifications');
-    expect(ids).toContain('retry-storm');
+    expect(ids).toContain('reconnect-storm');
   });
 });

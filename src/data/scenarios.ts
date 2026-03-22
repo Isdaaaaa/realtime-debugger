@@ -31,13 +31,13 @@ const liveNotificationsScenario: ScenarioDefinition = {
   ]
 };
 
-const retryStormScenario: ScenarioDefinition = {
-  name: 'retry-storm',
-  description: 'Rapid reconnect attempts with repeated retries and eventual stabilization.',
+const reconnectStormScenario: ScenarioDefinition = {
+  name: 'reconnect-storm',
+  description: 'Backpressure-style reconnect storm with repeated retries before recovery.',
   events: [
     { id: 'storm-000', atMs: 0, type: 'connect', channel: 'orders:stream', summary: 'Connected to orders stream', payload: { sessionId: 'sess_99' } },
     { id: 'storm-001', atMs: 120, type: 'message', channel: 'orders:stream', summary: 'Order update pushed', payload: { orderId: 'ord_1', status: 'pending', messageId: 'msg_1' } },
-    { id: 'storm-002', atMs: 240, type: 'drop', channel: 'orders:stream', summary: 'Primary stream socket dropped', payload: { reason: 'network-jitter' } },
+    { id: 'storm-002', atMs: 240, type: 'drop', channel: 'orders:stream', summary: 'Primary stream socket dropped', payload: { reason: 'upstream-backpressure', queueDepth: 128 } },
     { id: 'storm-003', atMs: 260, type: 'retry', channel: 'orders:stream', summary: 'Reconnect retry #1', payload: { attempt: 1 } },
     { id: 'storm-004', atMs: 320, type: 'retry', channel: 'orders:stream', summary: 'Reconnect retry #2', payload: { attempt: 2 } },
     { id: 'storm-005', atMs: 410, type: 'retry', channel: 'orders:stream', summary: 'Reconnect retry #3', payload: { attempt: 3 } },
@@ -48,7 +48,8 @@ const retryStormScenario: ScenarioDefinition = {
 export const scenarioFixtures: Record<string, ScenarioDefinition> = {
   [chatPresenceScenario.name]: chatPresenceScenario,
   [liveNotificationsScenario.name]: liveNotificationsScenario,
-  [retryStormScenario.name]: retryStormScenario
+  [reconnectStormScenario.name]: reconnectStormScenario,
+  'retry-storm': reconnectStormScenario
 };
 
 export const scenarioPresets: ScenarioPreset[] = [
@@ -69,13 +70,22 @@ export const scenarioPresets: ScenarioPreset[] = [
     rootCauseHint: 'Correlate pending ACK backlog with duplicate events on the same message id.'
   },
   {
-    id: retryStormScenario.name,
+    id: reconnectStormScenario.name,
     label: 'Reconnect Storm',
     summary: 'Repeated reconnect attempts before transport stabilizes.',
     expectedBehavior: 'Client enters reconnecting phase and stabilizes once connect succeeds.',
     observedBehavior: 'Multiple retries can create bursty latency and delayed payload handling.',
-    rootCauseHint: 'Focus on retry cadence and whether reconnect finishes before next drop.'
+    rootCauseHint: 'Focus on retry cadence and whether reconnect finishes before the next drop.'
   }
 ];
+
+const presetById = scenarioPresets.reduce<Record<string, ScenarioPreset>>((accumulator, preset) => {
+  accumulator[preset.id] = preset;
+  return accumulator;
+}, {});
+
+presetById['retry-storm'] = presetById['reconnect-storm'];
+
+export const getScenarioPreset = (scenarioId: string): ScenarioPreset | undefined => presetById[scenarioId];
 
 export const defaultScenarioName = chatPresenceScenario.name;
